@@ -1,7 +1,5 @@
-# ---------- PYTHON PATH FIX ----------
-import sys
-import os
-
+# ---------- PATH FIX ----------
+import sys, os
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
@@ -14,13 +12,13 @@ import plotly.graph_objects as go
 
 # ---------- PAGE CONFIG ----------
 st.set_page_config(
-    page_title="EV Analytics — India",
+    page_title="EV Analytics India",
     page_icon="⚡",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# ---------- TRY ETL IMPORTS ----------
+# ---------- ETL IMPORTS ----------
 try:
     from elt.column_mapper import map_columns
     from elt.data_cleaner import clean_data
@@ -28,686 +26,454 @@ try:
 except ImportError:
     HAS_ETL = False
 
-# ---------- PREMIUM CSS ----------
+# ---------- CSS ----------
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Instrument+Serif:ital@0;1&display=swap');
 
-/* ── Reset & Root ── */
-*, *::before, *::after { box-sizing: border-box; }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-    --bg:        #06080d;
-    --surface:   #0d1117;
-    --card:      #111722;
-    --border:    rgba(255,255,255,0.07);
-    --accent:    #00e5ff;
-    --accent2:   #7c3aed;
-    --green:     #22d3a5;
-    --red:       #f43f5e;
-    --amber:     #fbbf24;
-    --text:      #f0f4ff;
-    --muted:     #6b7ca3;
-    --font-head: 'Syne', sans-serif;
-    --font-body: 'DM Sans', sans-serif;
+    --bg:          #f4f6fb;
+    --white:       #ffffff;
+    --sidebar-bg:  #1e2433;
+    --border:      #e4e8f0;
+    --text:        #1a1f36;
+    --text-2:      #4a5173;
+    --text-3:      #8b91aa;
+    --blue:        #3366ff;
+    --blue-light:  #eef1ff;
+    --green:       #00b894;
+    --green-light: #e6f9f5;
+    --amber:       #f59e0b;
+    --amber-light: #fef3e2;
+    --violet:      #7c3aed;
+    --violet-light:#f3f0ff;
+    --font:        'Plus Jakarta Sans', sans-serif;
+    --font-serif:  'Instrument Serif', serif;
+    --radius:      14px;
+    --shadow:      0 1px 3px rgba(26,31,54,0.06), 0 4px 12px rgba(26,31,54,0.06);
+    --shadow-md:   0 2px 8px rgba(26,31,54,0.09), 0 8px 24px rgba(26,31,54,0.09);
 }
 
-/* ── App Background ── */
-.stApp {
-    background: var(--bg) !important;
-    font-family: var(--font-body) !important;
-}
+/* App background */
+.stApp { background: var(--bg) !important; font-family: var(--font) !important; }
 
-/* Noise grain overlay */
-.stApp::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
-    pointer-events: none;
-    z-index: 0;
-    opacity: 0.4;
-}
+/* Sidebar */
+[data-testid="stSidebar"] { background: var(--sidebar-bg) !important; }
+[data-testid="stSidebar"] > div { padding: 1.75rem 1.5rem !important; }
+[data-testid="stSidebar"] * { font-family: var(--font) !important; }
+[data-testid="stSidebar"] label,
+[data-testid="stSidebar"] p,
+[data-testid="stSidebar"] span { color: #a8b0cc !important; font-size: 0.8rem !important; }
+[data-testid="stSidebar"] hr { border-color: rgba(255,255,255,0.07) !important; margin: 1.25rem 0 !important; }
 
-/* ── Sidebar ── */
-[data-testid="stSidebar"] {
-    background: var(--surface) !important;
-    border-right: 1px solid var(--border) !important;
-    padding: 0 !important;
-}
-
-[data-testid="stSidebar"] > div {
-    padding: 2rem 1.5rem !important;
-}
-
-/* Sidebar brand */
-.sidebar-brand {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 0.75rem 0 1.5rem;
-    border-bottom: 1px solid var(--border);
+.sb-brand {
+    display: flex; align-items: center; gap: 0.875rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
     margin-bottom: 1.75rem;
 }
-
-.sidebar-brand .bolt {
-    width: 36px; height: 36px;
-    background: linear-gradient(135deg, var(--accent), var(--accent2));
+.sb-logo {
+    width: 40px; height: 40px;
+    background: linear-gradient(135deg, #3366ff, #7c3aed);
     border-radius: 10px;
     display: flex; align-items: center; justify-content: center;
-    font-size: 1.1rem;
-    flex-shrink: 0;
-    box-shadow: 0 0 18px rgba(0,229,255,0.35);
+    font-size: 1.2rem; flex-shrink: 0;
+}
+.sb-title { font-size: 0.95rem; font-weight: 700; color: #f0f2f8; line-height: 1.2; }
+.sb-sub   { font-size: 0.68rem; color: #6b7699; letter-spacing: 0.06em; text-transform: uppercase; margin-top: 2px; }
+.sb-section {
+    font-size: 0.62rem; font-weight: 700; letter-spacing: 0.1em;
+    text-transform: uppercase; color: #4a5380 !important;
+    margin: 1.5rem 0 0.6rem; display: block;
 }
 
-.sidebar-brand .brand-text {
-    font-family: var(--font-head);
-    font-size: 1rem;
-    font-weight: 800;
-    color: var(--text);
-    letter-spacing: -0.02em;
-    line-height: 1.1;
+/* Main layout */
+.main .block-container { padding: 2rem 2.5rem !important; max-width: 100% !important; }
+
+/* Page header */
+.page-header {
+    display: flex; align-items: center; justify-content: space-between;
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 1.5rem 2rem;
+    margin-bottom: 1.5rem; box-shadow: var(--shadow);
+}
+.page-title {
+    font-size: 1.6rem !important; font-weight: 800 !important;
+    color: var(--text) !important; letter-spacing: -0.03em; line-height: 1.15;
+}
+.page-title em { font-family: var(--font-serif); font-style: italic; color: var(--blue); }
+.page-sub { font-size: 0.85rem !important; color: var(--text-3) !important; margin-top: 0.25rem; }
+.live-badge {
+    display: inline-flex; align-items: center; gap: 0.4rem;
+    background: var(--green-light); border: 1px solid rgba(0,184,148,0.2);
+    border-radius: 100px; padding: 0.35rem 1rem;
+    font-size: 0.72rem; font-weight: 700; color: var(--green);
+    letter-spacing: 0.04em; text-transform: uppercase;
+}
+.live-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--green); animation: blink 2s infinite;
+}
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+/* KPI grid */
+.kpi-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 1rem; margin-bottom: 1.5rem; }
+.kpi {
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 1.25rem 1.5rem;
+    box-shadow: var(--shadow); position: relative; overflow: hidden;
+    transition: box-shadow 0.2s, transform 0.2s;
+}
+.kpi:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+.kpi-bar { position: absolute; top:0; left:0; right:0; height:3px; border-radius:14px 14px 0 0; }
+.kpi-icon { width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:1.1rem; margin-bottom:0.875rem; }
+.kpi-label { font-size:0.68rem; font-weight:700; letter-spacing:0.09em; text-transform:uppercase; color:var(--text-3); margin-bottom:0.3rem; }
+.kpi-value { font-size:1.75rem; font-weight:800; color:var(--text); letter-spacing:-0.04em; line-height:1; }
+.kpi-note  { font-size:0.72rem; color:var(--text-3); margin-top:0.35rem; font-weight:500; }
+
+/* Chart card */
+.chart-card {
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 1.5rem;
+    box-shadow: var(--shadow); margin-bottom: 1.25rem;
+}
+.chart-card-hd {
+    display: flex; align-items: center; justify-content: space-between;
+    padding-bottom: 1rem; border-bottom: 1px solid var(--border); margin-bottom: 0.25rem;
+}
+.chart-card-title { font-size:0.95rem; font-weight:700; color:var(--text); letter-spacing:-0.01em; }
+.chart-badge {
+    font-size:0.64rem; font-weight:700; letter-spacing:0.07em;
+    text-transform:uppercase; color:var(--blue);
+    background:var(--blue-light); border-radius:6px; padding:0.2rem 0.6rem;
 }
 
-.sidebar-brand .brand-sub {
-    font-size: 0.7rem;
-    color: var(--muted);
-    font-weight: 400;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-}
+/* Multiselect */
+[data-baseweb="select"] { background:rgba(255,255,255,0.05) !important; border-color:rgba(255,255,255,0.1) !important; border-radius:8px !important; }
+[data-baseweb="tag"]    { background:rgba(51,102,255,0.25) !important; color:#8ab0ff !important; border-radius:5px !important; border:none !important; }
 
-/* Section labels */
-.section-label {
-    font-family: var(--font-head);
-    font-size: 0.65rem;
-    font-weight: 700;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin: 1.5rem 0 0.6rem;
-}
-
-/* ── Main Header ── */
-.dash-header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    padding: 2rem 0 2rem;
-    border-bottom: 1px solid var(--border);
-    margin-bottom: 2rem;
-}
-
-.dash-title {
-    font-family: var(--font-head);
-    font-size: 2.4rem;
-    font-weight: 800;
-    color: var(--text);
-    letter-spacing: -0.04em;
-    line-height: 1;
-    margin: 0;
-}
-
-.dash-title span {
-    background: linear-gradient(90deg, var(--accent), var(--accent2));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
-
-.dash-sub {
-    color: var(--muted);
-    font-size: 0.9rem;
-    margin: 0.4rem 0 0;
-    font-weight: 400;
-}
-
-.status-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    background: rgba(34,211,165,0.1);
-    border: 1px solid rgba(34,211,165,0.25);
-    border-radius: 100px;
-    padding: 0.3rem 0.85rem;
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: var(--green);
-    letter-spacing: 0.03em;
-}
-
-.status-pill::before {
-    content: '';
-    width: 6px; height: 6px;
-    border-radius: 50%;
-    background: var(--green);
-    animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.4; }
-}
-
-/* ── Metric Cards ── */
-.kpi-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 1rem;
-    margin-bottom: 2rem;
-}
-
-.kpi-card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 1.5rem;
-    position: relative;
-    overflow: hidden;
-    transition: border-color 0.2s, transform 0.2s;
-}
-
-.kpi-card::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 2px;
-    border-radius: 16px 16px 0 0;
-}
-
-.kpi-card.cyan::before  { background: linear-gradient(90deg, var(--accent), transparent); }
-.kpi-card.violet::before { background: linear-gradient(90deg, var(--accent2), transparent); }
-.kpi-card.green::before  { background: linear-gradient(90deg, var(--green), transparent); }
-.kpi-card.amber::before  { background: linear-gradient(90deg, var(--amber), transparent); }
-
-.kpi-card:hover {
-    border-color: rgba(255,255,255,0.14);
-    transform: translateY(-3px);
-}
-
-.kpi-label {
-    font-size: 0.7rem;
-    font-weight: 700;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin-bottom: 0.75rem;
-}
-
-.kpi-value {
-    font-family: var(--font-head);
-    font-size: 2rem;
-    font-weight: 800;
-    color: var(--text);
-    letter-spacing: -0.04em;
-    line-height: 1;
-}
-
-.kpi-icon {
-    position: absolute;
-    top: 1.25rem; right: 1.25rem;
-    font-size: 1.4rem;
-    opacity: 0.2;
-}
-
-.kpi-delta {
-    font-size: 0.72rem;
-    color: var(--green);
-    margin-top: 0.4rem;
-    font-weight: 500;
-}
-
-/* ── Chart Wrapper ── */
-.chart-wrap {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 1.5rem;
-    margin-bottom: 1.25rem;
-}
-
-.chart-head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 1.25rem;
-}
-
-.chart-head-title {
-    font-family: var(--font-head);
-    font-size: 1rem;
-    font-weight: 700;
-    color: var(--text);
-    letter-spacing: -0.02em;
-}
-
-.chart-head-badge {
-    font-size: 0.65rem;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--accent);
-    background: rgba(0,229,255,0.08);
-    border: 1px solid rgba(0,229,255,0.2);
-    border-radius: 6px;
-    padding: 0.2rem 0.55rem;
-}
-
-/* ── Upload Zone ── */
+/* File uploader */
 [data-testid="stFileUploader"] {
-    background: rgba(0,229,255,0.03) !important;
-    border: 1.5px dashed rgba(0,229,255,0.25) !important;
-    border-radius: 12px !important;
-    padding: 0.75rem !important;
+    background:rgba(255,255,255,0.04) !important;
+    border:1.5px dashed rgba(255,255,255,0.12) !important;
+    border-radius:10px !important;
 }
 
-[data-testid="stFileUploader"] label {
-    color: var(--muted) !important;
-}
-
-/* ── Multiselect ── */
-[data-baseweb="select"] {
-    background-color: #161d2e !important;
-    border-radius: 10px !important;
-    border: 1px solid var(--border) !important;
-}
-
-[data-baseweb="tag"] {
-    background-color: rgba(0,229,255,0.15) !important;
-    color: var(--accent) !important;
-    border: 1px solid rgba(0,229,255,0.3) !important;
-    border-radius: 6px !important;
-}
-
-/* ── Dataframe ── */
-.stDataFrame {
-    border-radius: 12px !important;
-    overflow: hidden !important;
-    border: 1px solid var(--border) !important;
-}
-
-/* ── Download buttons ── */
+/* Download buttons */
 .stDownloadButton button {
-    background: transparent !important;
-    border: 1px solid rgba(0,229,255,0.3) !important;
-    color: var(--accent) !important;
-    border-radius: 10px !important;
-    font-family: var(--font-body) !important;
-    font-weight: 600 !important;
-    font-size: 0.85rem !important;
-    padding: 0.6rem 1.25rem !important;
-    transition: all 0.2s !important;
-    width: 100%;
+    background:var(--blue) !important; color:white !important; border:none !important;
+    border-radius:10px !important; font-family:var(--font) !important;
+    font-weight:600 !important; font-size:0.85rem !important;
+    padding:0.6rem 1.25rem !important; width:100%; transition:all 0.2s !important;
 }
-
 .stDownloadButton button:hover {
-    background: rgba(0,229,255,0.08) !important;
-    border-color: var(--accent) !important;
-    box-shadow: 0 0 16px rgba(0,229,255,0.15) !important;
+    background:#254de0 !important; box-shadow:0 4px 12px rgba(51,102,255,0.3) !important;
+    transform:translateY(-1px) !important;
 }
 
-/* ── Alerts ── */
-.stSuccess, .stWarning, .stError, .stInfo {
-    border-radius: 10px !important;
-    font-family: var(--font-body) !important;
-    font-size: 0.85rem !important;
+/* Dataframe */
+.stDataFrame { border-radius:10px !important; border:1px solid var(--border) !important; overflow:hidden !important; }
+
+/* Alerts */
+.stSuccess,.stWarning,.stError,.stInfo { border-radius:10px !important; font-family:var(--font) !important; font-size:0.85rem !important; }
+
+/* Hide Streamlit chrome */
+#MainMenu, footer, header { visibility:hidden; }
+.stDeployButton { display:none; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width:5px; height:5px; }
+::-webkit-scrollbar-track { background:var(--bg); }
+::-webkit-scrollbar-thumb { background:#d1d5e0; border-radius:3px; }
+
+/* Empty state */
+.empty-wrap {
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    text-align:center; background:var(--white); border:1px solid var(--border);
+    border-radius:20px; padding:5rem 2rem; box-shadow:var(--shadow);
 }
-
-/* ── Global text ── */
-h1, h2, h3, h4, p, label, .stMarkdown {
-    font-family: var(--font-body) !important;
-    color: var(--text) !important;
-}
-
-/* ── Hide Streamlit chrome ── */
-#MainMenu, footer, header { visibility: hidden; }
-.stDeployButton { display: none; }
-
-/* ── Divider ── */
-hr { border-color: var(--border) !important; margin: 1.25rem 0 !important; }
-
-/* ── Empty state ── */
-.empty-state {
-    text-align: center;
-    padding: 5rem 2rem;
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    margin: 1rem 0;
-}
-
-.empty-icon {
-    font-size: 3.5rem;
-    margin-bottom: 1.25rem;
-    filter: drop-shadow(0 0 24px rgba(0,229,255,0.3));
-}
-
-.empty-title {
-    font-family: var(--font-head) !important;
-    font-size: 1.6rem !important;
-    font-weight: 800 !important;
-    letter-spacing: -0.03em;
-    color: var(--text) !important;
-    margin-bottom: 0.5rem;
-}
-
-.empty-sub {
-    color: var(--muted) !important;
-    font-size: 0.9rem !important;
-    max-width: 380px;
-    margin: 0 auto;
-    line-height: 1.6;
-}
-
-.format-chips {
-    display: flex;
-    gap: 0.5rem;
-    justify-content: center;
-    margin-top: 1.5rem;
-}
-
-.format-chip {
-    font-size: 0.7rem;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--muted);
-    background: rgba(255,255,255,0.04);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 0.3rem 0.7rem;
-}
-
-/* ── Scrollbar ── */
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: var(--bg); }
-::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+.empty-icon { font-size:3rem; margin-bottom:1rem; }
+.empty-title { font-size:1.4rem !important; font-weight:800 !important; color:var(--text) !important; letter-spacing:-0.03em; margin-bottom:0.5rem; }
+.empty-body  { font-size:0.875rem !important; color:var(--text-3) !important; max-width:360px; line-height:1.7; }
+.fmt-chips   { display:flex; gap:0.5rem; justify-content:center; margin-top:1.25rem; }
+.fmt-chip    { font-size:0.68rem; font-weight:700; letter-spacing:0.07em; text-transform:uppercase; color:var(--text-3); background:var(--bg); border:1px solid var(--border); border-radius:6px; padding:0.25rem 0.65rem; }
+.step-grid   { display:grid; grid-template-columns:repeat(3,1fr); gap:1rem; margin-top:2rem; max-width:580px; }
+.step        { background:var(--bg); border:1px solid var(--border); border-radius:12px; padding:1rem; text-align:left; }
+.step-num    { font-size:0.63rem; font-weight:800; letter-spacing:0.08em; text-transform:uppercase; color:var(--blue); background:var(--blue-light); border-radius:5px; padding:0.15rem 0.5rem; display:inline-block; margin-bottom:0.5rem; }
+.step-text   { font-size:0.78rem; color:var(--text-2); font-weight:500; line-height:1.5; }
 </style>
 """, unsafe_allow_html=True)
 
-# ---------- PLOTLY THEME ----------
-PLOT_LAYOUT = dict(
-    plot_bgcolor='rgba(0,0,0,0)',
-    paper_bgcolor='rgba(0,0,0,0)',
-    font=dict(family='DM Sans, sans-serif', color='#6b7ca3', size=12),
-    xaxis=dict(showgrid=False, color='#6b7ca3', linecolor='rgba(255,255,255,0.07)', tickcolor='rgba(0,0,0,0)'),
-    yaxis=dict(showgrid=True, gridcolor='rgba(255,255,255,0.05)', color='#6b7ca3', linecolor='rgba(0,0,0,0)', tickcolor='rgba(0,0,0,0)'),
-    legend=dict(bgcolor='rgba(0,0,0,0)', font=dict(color='#6b7ca3')),
-    margin=dict(t=10, l=10, r=10, b=10),
-)
+# ── Chart helpers ──
+PALETTE = ["#3366ff","#00b894","#f59e0b","#ef4444","#7c3aed","#06b6d4","#f97316"]
 
-PALETTE = ["#00e5ff", "#7c3aed", "#22d3a5", "#f43f5e", "#fbbf24", "#818cf8", "#fb923c"]
+def base_layout(**kw):
+    """Build a fresh plotly layout dict each call — no shared dict to conflict."""
+    d = dict(
+        plot_bgcolor="rgba(0,0,0,0)",
+        paper_bgcolor="rgba(0,0,0,0)",
+        font=dict(family="Plus Jakarta Sans, sans-serif", color="#8b91aa", size=11),
+        margin=dict(t=16, l=8, r=8, b=8),
+        legend=dict(bgcolor="rgba(0,0,0,0)", font=dict(color="#4a5173", size=11)),
+        xaxis=dict(showgrid=False, color="#8b91aa", linecolor="#e4e8f0", tickcolor="rgba(0,0,0,0)"),
+        yaxis=dict(showgrid=True, gridcolor="#f0f2f8", color="#8b91aa", linecolor="rgba(0,0,0,0)"),
+    )
+    # Allow callers to override individual axis keys safely
+    for k, v in kw.items():
+        if k in ("xaxis","yaxis") and isinstance(v, dict):
+            d[k] = {**d[k], **v}   # merge instead of replace
+        else:
+            d[k] = v
+    return d
 
-# ---------- HELPERS ----------
+def chart_card_start(title, badge):
+    return f"""<div class='chart-card'>
+    <div class='chart-card-hd'>
+        <span class='chart-card-title'>{title}</span>
+        <span class='chart-badge'>{badge}</span>
+    </div>"""
+
+def kpi_html(icon, label, value, note, bar_color, icon_bg):
+    return f"""<div class='kpi'>
+        <div class='kpi-bar' style='background:{bar_color}'></div>
+        <div class='kpi-icon' style='background:{icon_bg}'>{icon}</div>
+        <div class='kpi-label'>{label}</div>
+        <div class='kpi-value'>{value}</div>
+        <div class='kpi-note'>{note}</div>
+    </div>"""
+
+def smart_money(v):
+    if v >= 1e7:  return f"₹{v/1e7:.1f}Cr"
+    if v >= 1e5:  return f"₹{v/1e5:.0f}L"
+    return f"₹{v:,.0f}"
+
+# ── Data processing ──
 def process_data(df):
     if HAS_ETL:
         df = map_columns(df)
         df = clean_data(df)
     else:
-        mapping = {
-            'Vehicle_ID': 'VehicleID', 'Battery_kWh': 'BatterykWh',
-            'Range_km': 'Rangekm', 'Ex_Showroom_Price_INR': 'PriceINR',
-            'Avg_Charging_Time_Hours': 'ChargingTimeHours',
-            'Energy_Consumed_kWh': 'EnergykWh', 'Operating_Cost_INR': 'OperatingCostINR',
-            'Revenue_INR': 'RevenueINR', 'Usage_Type': 'UsageType',
-            'Customer_Location_Type': 'LocationType'
+        col_map = {
+            "Vehicle_ID":"VehicleID","Battery_kWh":"BatterykWh","Range_km":"Rangekm",
+            "Ex_Showroom_Price_INR":"PriceINR","Avg_Charging_Time_Hours":"ChargingTimeHours",
+            "Energy_Consumed_kWh":"EnergykWh","Operating_Cost_INR":"OperatingCostINR",
+            "Revenue_INR":"RevenueINR","Usage_Type":"UsageType","Customer_Location_Type":"LocationType"
         }
-        df = df.rename(columns=mapping)
-        if 'ProfitINR' not in df.columns:
-            df['ProfitINR'] = df['RevenueINR'] - df['OperatingCostINR']
-        df = df.dropna(subset=['Segment', 'Manufacturer'])
+        df = df.rename(columns=col_map)
+        if "ProfitINR" not in df.columns:
+            df["ProfitINR"] = df["RevenueINR"] - df["OperatingCostINR"]
+        df = df.dropna(subset=["Segment","Manufacturer"])
     return df
 
-def fmt_crore(val):
-    if val >= 1e7:
-        return f"₹{val/1e7:.1f}Cr"
-    return f"₹{val/1e5:.0f}L"
-
-def chart_box(title, badge=None):
-    badge_html = f"<span class='chart-head-badge'>{badge}</span>" if badge else ""
-    return f"""
-    <div class='chart-wrap'>
-        <div class='chart-head'>
-            <span class='chart-head-title'>{title}</span>
-            {badge_html}
-        </div>
-    """
-
-# ---------- SIDEBAR ----------
+# ── SIDEBAR ──
 with st.sidebar:
     st.markdown("""
-        <div class='sidebar-brand'>
-            <div class='bolt'>⚡</div>
-            <div>
-                <div class='brand-text'>EV Analytics</div>
-                <div class='brand-sub'>India Dashboard</div>
-            </div>
+    <div class='sb-brand'>
+        <div class='sb-logo'>⚡</div>
+        <div>
+            <div class='sb-title'>EV Analytics</div>
+            <div class='sb-sub'>India Platform</div>
         </div>
-    """, unsafe_allow_html=True)
+    </div>""", unsafe_allow_html=True)
 
-    st.markdown("<div class='section-label'>Data Source</div>", unsafe_allow_html=True)
-    file = st.file_uploader("Upload EV Dataset", ["csv", "xlsx"], label_visibility="collapsed")
+    st.markdown("<span class='sb-section'>Data Source</span>", unsafe_allow_html=True)
+    file = st.file_uploader("Upload Dataset", ["csv","xlsx"], label_visibility="collapsed")
 
-    st.markdown("<div class='section-label'>Filters</div>", unsafe_allow_html=True)
-    segment_filter = st.multiselect("Segment", [], key="seg_empty")
-    manufacturer_filter = st.multiselect("Manufacturer", [], key="mfr_empty")
+    st.markdown("<span class='sb-section'>Filters</span>", unsafe_allow_html=True)
+    _seg = st.multiselect("Segment", [], key="seg0")
+    _mfr = st.multiselect("Manufacturer", [], key="mfr0")
 
     st.markdown("---")
-    st.markdown(f"""
-        <div style='font-size:0.72rem; color:#3d4f72; text-align:center; line-height:1.6;'>
-            EV Analytics Platform<br>Built with Streamlit &amp; Plotly
-        </div>
-    """, unsafe_allow_html=True)
+    st.markdown("""<div style='font-size:0.7rem;color:#3a4260;text-align:center;line-height:1.8'>
+        EV Analytics Platform v2.0<br>Powered by Streamlit & Plotly</div>""", unsafe_allow_html=True)
 
-# ---------- MAIN HEADER ----------
+# ── PAGE HEADER ──
 st.markdown("""
-    <div class='dash-header'>
-        <div>
-            <h1 class='dash-title'>Electric Vehicle <span>Intelligence</span></h1>
-            <p class='dash-sub'>Comprehensive analytics for India's EV ecosystem</p>
-        </div>
-        <div class='status-pill'>Live Dashboard</div>
+<div class='page-header'>
+    <div>
+        <div class='page-title'>Electric Vehicle <em>Analytics</em></div>
+        <div class='page-sub'>Comprehensive intelligence for India's EV market ecosystem</div>
     </div>
-""", unsafe_allow_html=True)
+    <div class='live-badge'><div class='live-dot'></div> Live Dashboard</div>
+</div>""", unsafe_allow_html=True)
 
-# ---------- MAIN CONTENT ----------
+# ── MAIN ──
 if file:
     try:
         df = pd.read_excel(file) if file.name.endswith("xlsx") else pd.read_csv(file)
         df = process_data(df)
 
-        # ── Dynamic sidebar filters ──
+        # Live sidebar filters
         with st.sidebar:
-            st.markdown("<div class='section-label'>Filters</div>", unsafe_allow_html=True)
-            segment_filter = st.multiselect(
-                "Segment",
-                sorted(df["Segment"].unique()),
-                default=list(df["Segment"].unique()),
-                key="seg_live"
-            )
-            manufacturer_filter = st.multiselect(
-                "Manufacturer",
-                sorted(df["Manufacturer"].unique()),
-                default=list(df["Manufacturer"].unique()),
-                key="mfr_live"
-            )
+            st.markdown("<span class='sb-section'>Filters</span>", unsafe_allow_html=True)
+            seg_sel = st.multiselect("Segment", sorted(df["Segment"].unique()),
+                                     default=list(df["Segment"].unique()), key="seg1")
+            mfr_sel = st.multiselect("Manufacturer", sorted(df["Manufacturer"].unique()),
+                                     default=list(df["Manufacturer"].unique()), key="mfr1")
             st.markdown("---")
-            st.markdown(f"""
-                <div style='font-size:0.72rem; color:#3d4f72; text-align:center; line-height:1.6;'>
-                    EV Analytics Platform<br>Built with Streamlit &amp; Plotly
-                </div>
-            """, unsafe_allow_html=True)
+            st.markdown("""<div style='font-size:0.7rem;color:#3a4260;text-align:center;line-height:1.8'>
+                EV Analytics Platform v2.0<br>Powered by Streamlit & Plotly</div>""", unsafe_allow_html=True)
 
-        fdf = df[df["Segment"].isin(segment_filter) & df["Manufacturer"].isin(manufacturer_filter)]
+        fdf = df[df["Segment"].isin(seg_sel) & df["Manufacturer"].isin(mfr_sel)]
 
-        # ── KPI Cards ──
-        total_rev = fdf['RevenueINR'].sum()
-        total_profit = fdf['ProfitINR'].sum()
-        avg_battery = fdf['BatterykWh'].mean()
-        avg_range = fdf['Rangekm'].mean()
+        # ── KPI CARDS ──
+        rev   = fdf["RevenueINR"].sum()
+        prof  = fdf["ProfitINR"].sum()
+        bat   = fdf["BatterykWh"].mean()
+        rng   = fdf["Rangekm"].mean()
+        marg  = (prof / rev * 100) if rev > 0 else 0
 
-        st.markdown(f"""
-        <div class='kpi-grid'>
-            <div class='kpi-card cyan'>
-                <div class='kpi-icon'>🚗</div>
-                <div class='kpi-label'>Total Vehicles</div>
-                <div class='kpi-value'>{len(fdf):,}</div>
-                <div class='kpi-delta'>↑ across {fdf["Segment"].nunique()} segments</div>
-            </div>
-            <div class='kpi-card violet'>
-                <div class='kpi-icon'>💹</div>
-                <div class='kpi-label'>Total Revenue</div>
-                <div class='kpi-value'>{fmt_crore(total_rev)}</div>
-                <div class='kpi-delta'>₹{total_rev:,.0f}</div>
-            </div>
-            <div class='kpi-card green'>
-                <div class='kpi-icon'>💰</div>
-                <div class='kpi-label'>Net Profit</div>
-                <div class='kpi-value'>{fmt_crore(total_profit)}</div>
-                <div class='kpi-delta'>{(total_profit/total_rev*100):.1f}% margin</div>
-            </div>
-            <div class='kpi-card amber'>
-                <div class='kpi-icon'>🔋</div>
-                <div class='kpi-label'>Avg Battery</div>
-                <div class='kpi-value'>{avg_battery:.0f}<span style='font-size:1rem;font-weight:400;color:#6b7ca3'> kWh</span></div>
-                <div class='kpi-delta'>~{avg_range:.0f} km avg range</div>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-
-        # ── Chart 1: Revenue by Segment (full width) ──
-        st.markdown(chart_box("Revenue Distribution by Segment", "Bar Chart") + "</div>", unsafe_allow_html=True)
-        seg_rev = fdf.groupby("Segment")["RevenueINR"].sum().reset_index().sort_values('RevenueINR', ascending=False)
-        fig1 = px.bar(
-            seg_rev, x="Segment", y="RevenueINR",
-            color="Segment", text="RevenueINR",
-            color_discrete_sequence=PALETTE
+        st.markdown(
+            "<div class='kpi-row'>" +
+            kpi_html("🚗","Total Vehicles", f"{len(fdf):,}",
+                     f"{fdf['Segment'].nunique()} segments · {fdf['Manufacturer'].nunique()} brands",
+                     "#3366ff","#eef1ff") +
+            kpi_html("💹","Total Revenue", smart_money(rev),
+                     f"₹{rev:,.0f}","#7c3aed","#f3f0ff") +
+            kpi_html("💰","Net Profit", smart_money(prof),
+                     f"{marg:.1f}% profit margin","#00b894","#e6f9f5") +
+            kpi_html("🔋","Avg Battery", f"{bat:.0f} kWh",
+                     f"≈ {rng:.0f} km avg range","#f59e0b","#fef3e2") +
+            "</div>",
+            unsafe_allow_html=True
         )
-        fig1.update_traces(
-            texttemplate="₹%{text:,.0f}", textposition="outside",
-            textfont=dict(size=11, color='#6b7ca3'),
-            marker_line_width=0,
-            width=0.55
-        )
-        fig1.update_layout(**PLOT_LAYOUT, showlegend=False, height=360)
+
+        # ── CHART 1: Revenue by Segment (full width) ──
+        st.markdown(chart_card_start("Revenue Distribution by Segment","Bar Chart"), unsafe_allow_html=True)
+        seg_rev = fdf.groupby("Segment")["RevenueINR"].sum().reset_index().sort_values("RevenueINR", ascending=False)
+        fig1 = px.bar(seg_rev, x="Segment", y="RevenueINR", color="Segment",
+                      text="RevenueINR", color_discrete_sequence=PALETTE)
+        fig1.update_traces(texttemplate="₹%{text:,.0f}", textposition="outside",
+                           textfont=dict(size=11, color="#4a5173"), marker_line_width=0, width=0.5)
+        fig1.update_layout(**base_layout(showlegend=False, height=360))
         st.plotly_chart(fig1, use_container_width=True)
+        st.markdown("</div>", unsafe_allow_html=True)
 
-        # ── Charts Row 2 ──
-        c1, c2 = st.columns(2)
-
+        # ── CHARTS ROW 2 ──
+        c1, c2 = st.columns(2, gap="medium")
         with c1:
-            st.markdown(chart_box("Battery Capacity vs Range", "Scatter") + "</div>", unsafe_allow_html=True)
-            fig2 = px.scatter(
-                fdf, x="BatterykWh", y="Rangekm",
-                size="RevenueINR", color="Segment",
-                hover_data=["Manufacturer", "Model"] if "Model" in fdf.columns else ["Manufacturer"],
-                labels={"BatterykWh": "Battery (kWh)", "Rangekm": "Range (km)"},
-                color_discrete_sequence=PALETTE
-            )
-            fig2.update_traces(marker=dict(line=dict(width=0), opacity=0.85))
-            fig2.update_layout(**PLOT_LAYOUT, height=360)
+            st.markdown(chart_card_start("Battery Capacity vs Range","Scatter Plot"), unsafe_allow_html=True)
+            hov = ["Manufacturer","Model"] if "Model" in fdf.columns else ["Manufacturer"]
+            fig2 = px.scatter(fdf, x="BatterykWh", y="Rangekm", size="RevenueINR",
+                              color="Segment", hover_data=hov,
+                              labels={"BatterykWh":"Battery (kWh)","Rangekm":"Range (km)"},
+                              color_discrete_sequence=PALETTE)
+            fig2.update_traces(marker=dict(line=dict(width=0), opacity=0.8))
+            fig2.update_layout(**base_layout(height=360))
             st.plotly_chart(fig2, use_container_width=True)
+            st.markdown("</div>", unsafe_allow_html=True)
 
         with c2:
-            st.markdown(chart_box("Top 10 Manufacturers by Profit", "Bar") + "</div>", unsafe_allow_html=True)
-            top_mfr = fdf.groupby("Manufacturer")["ProfitINR"].sum().sort_values(ascending=False).head(10).reset_index()
-            fig3 = px.bar(
-                top_mfr, x="Manufacturer", y="ProfitINR",
-                text="ProfitINR", color="ProfitINR",
-                color_continuous_scale=["#0d1117", "#00e5ff"]
-            )
-            fig3.update_traces(
-                texttemplate="₹%{text:,.0f}", textposition="outside",
-                textfont=dict(size=10, color='#6b7ca3'),
-                marker_line_width=0, width=0.55
-            )
-            fig3.update_layout(**PLOT_LAYOUT, showlegend=False, height=360,
-                               xaxis=dict(tickangle=-40, showgrid=False, color='#6b7ca3', linecolor='rgba(255,255,255,0.07)'),
-                               coloraxis_showscale=False)
+            st.markdown(chart_card_start("Top 10 Manufacturers by Profit","Ranked Bar"), unsafe_allow_html=True)
+            top10 = (fdf.groupby("Manufacturer")["ProfitINR"].sum()
+                       .sort_values(ascending=False).head(10).reset_index())
+            fig3 = px.bar(top10, x="Manufacturer", y="ProfitINR", text="ProfitINR",
+                          color="ProfitINR",
+                          color_continuous_scale=["#c7d0ff","#3366ff"])
+            fig3.update_traces(texttemplate="₹%{text:,.0f}", textposition="outside",
+                               textfont=dict(size=10, color="#4a5173"), marker_line_width=0, width=0.5)
+            # merge xaxis override safely via base_layout
+            fig3.update_layout(**base_layout(
+                showlegend=False, height=360, coloraxis_showscale=False,
+                xaxis={"tickangle":-40}
+            ))
             st.plotly_chart(fig3, use_container_width=True)
+            st.markdown("</div>", unsafe_allow_html=True)
 
-        # ── Charts Row 3 ──
-        c3, c4, c5 = st.columns(3)
-
+        # ── CHARTS ROW 3 ──
+        c3, c4, c5 = st.columns(3, gap="medium")
         with c3:
-            st.markdown(chart_box("Usage Type Split", "Donut") + "</div>", unsafe_allow_html=True)
-            if 'UsageType' in fdf.columns:
-                usage = fdf.groupby('UsageType').size().reset_index(name='Count')
-                fig4 = px.pie(usage, values='Count', names='UsageType',
-                              color_discrete_sequence=PALETTE, hole=0.58)
-                fig4.update_traces(textinfo='percent+label', textfont_size=11,
-                                   marker=dict(line=dict(color='#06080d', width=2)))
-                fig4.update_layout(**PLOT_LAYOUT, showlegend=False, height=300,
-                                   margin=dict(t=10, l=10, r=10, b=10))
+            st.markdown(chart_card_start("Usage Type Split","Donut Chart"), unsafe_allow_html=True)
+            if "UsageType" in fdf.columns:
+                usage = fdf.groupby("UsageType").size().reset_index(name="Count")
+                fig4  = px.pie(usage, values="Count", names="UsageType",
+                               color_discrete_sequence=PALETTE, hole=0.6)
+                fig4.update_traces(textinfo="percent+label", textfont_size=11,
+                                   marker=dict(line=dict(color="#ffffff", width=2)))
+                fig4.update_layout(**base_layout(showlegend=False, height=300))
                 st.plotly_chart(fig4, use_container_width=True)
+            st.markdown("</div>", unsafe_allow_html=True)
 
         with c4:
-            st.markdown(chart_box("Avg Charging Time", "By Segment") + "</div>", unsafe_allow_html=True)
-            if 'ChargingTimeHours' in fdf.columns:
-                chg = fdf.groupby('Segment')['ChargingTimeHours'].mean().reset_index()
-                fig5 = px.bar(chg, x='Segment', y='ChargingTimeHours',
-                              color='Segment', labels={'ChargingTimeHours': 'Hours'},
+            st.markdown(chart_card_start("Avg Charging Time","By Segment"), unsafe_allow_html=True)
+            if "ChargingTimeHours" in fdf.columns:
+                chg  = fdf.groupby("Segment")["ChargingTimeHours"].mean().reset_index()
+                fig5 = px.bar(chg, x="Segment", y="ChargingTimeHours", color="Segment",
+                              labels={"ChargingTimeHours":"Hours"},
                               color_discrete_sequence=PALETTE)
-                fig5.update_traces(marker_line_width=0, width=0.55)
-                fig5.update_layout(**PLOT_LAYOUT, showlegend=False, height=300)
+                fig5.update_traces(marker_line_width=0, width=0.5)
+                fig5.update_layout(**base_layout(showlegend=False, height=300))
                 st.plotly_chart(fig5, use_container_width=True)
+            st.markdown("</div>", unsafe_allow_html=True)
 
         with c5:
-            st.markdown(chart_box("Energy Consumption", "By Segment") + "</div>", unsafe_allow_html=True)
-            if 'EnergykWh' in fdf.columns:
-                energy = fdf.groupby('Segment')['EnergykWh'].mean().reset_index()
-                fig6 = px.bar(energy, x='Segment', y='EnergykWh',
-                              color='Segment', labels={'EnergykWh': 'kWh'},
-                              color_discrete_sequence=PALETTE[::-1])
-                fig6.update_traces(marker_line_width=0, width=0.55)
-                fig6.update_layout(**PLOT_LAYOUT, showlegend=False, height=300)
+            st.markdown(chart_card_start("Energy Consumption","By Segment"), unsafe_allow_html=True)
+            if "EnergykWh" in fdf.columns:
+                erg  = fdf.groupby("Segment")["EnergykWh"].mean().reset_index()
+                fig6 = px.bar(erg, x="Segment", y="EnergykWh", color="Segment",
+                              labels={"EnergykWh":"kWh"},
+                              color_discrete_sequence=[PALETTE[i] for i in [2,0,1,3,4]])
+                fig6.update_traces(marker_line_width=0, width=0.5)
+                fig6.update_layout(**base_layout(showlegend=False, height=300))
                 st.plotly_chart(fig6, use_container_width=True)
+            st.markdown("</div>", unsafe_allow_html=True)
 
-        # ── Raw Data ──
-        st.markdown("<br>", unsafe_allow_html=True)
-        st.markdown(chart_box("Raw Dataset", f"{len(fdf):,} rows") + "</div>", unsafe_allow_html=True)
+        # ── RAW DATA ──
+        st.markdown(chart_card_start(f"Raw Dataset",f"{len(fdf):,} rows · {len(fdf.columns)} columns"), unsafe_allow_html=True)
         st.dataframe(fdf.reset_index(drop=True), height=360, use_container_width=True)
+        st.markdown("</div>", unsafe_allow_html=True)
 
-        # ── Downloads ──
+        # ── DOWNLOADS ──
         st.markdown("<br>", unsafe_allow_html=True)
-        d1, d2 = st.columns(2)
+        d1, d2 = st.columns(2, gap="medium")
         with d1:
-            csv = fdf.to_csv(index=False).encode('utf-8')
-            st.download_button("⬇ Download Filtered Data (CSV)", csv, "ev_filtered_data.csv", "text/csv", use_container_width=True)
+            st.download_button("⬇  Download Filtered Data (CSV)",
+                               fdf.to_csv(index=False).encode(), "ev_filtered_data.csv",
+                               "text/csv", use_container_width=True)
         with d2:
             summary = pd.DataFrame({
-                'Metric': ['Total Vehicles','Total Revenue (₹)','Total Profit (₹)','Avg Battery (kWh)','Avg Range (km)'],
-                'Value': [
-                    len(fdf),
-                    f"₹{fdf['RevenueINR'].sum():,.0f}",
-                    f"₹{fdf['ProfitINR'].sum():,.0f}",
-                    f"{fdf['BatterykWh'].mean():.1f}",
-                    f"{fdf['Rangekm'].mean():.1f}"
-                ]
+                "Metric":["Total Vehicles","Total Revenue (₹)","Total Profit (₹)","Avg Battery (kWh)","Avg Range (km)"],
+                "Value": [len(fdf), f"₹{rev:,.0f}", f"₹{prof:,.0f}", f"{bat:.1f}", f"{rng:.1f}"]
             })
-            st.download_button("📊 Download Summary Report (CSV)", summary.to_csv(index=False).encode('utf-8'),
-                               "ev_summary.csv", "text/csv", use_container_width=True)
+            st.download_button("📊  Download Summary Report (CSV)",
+                               summary.to_csv(index=False).encode(), "ev_summary.csv",
+                               "text/csv", use_container_width=True)
 
     except Exception as e:
         st.error(f"❌ Error processing file: {str(e)}")
         st.code("""Required columns:
-- Vehicle_ID / VehicleID        - Manufacturer
-- Model                         - Segment
-- Battery_kWh / BatterykWh     - Range_km / Rangekm
-- Revenue_INR / RevenueINR      - Operating_Cost_INR / OperatingCostINR""")
+  Manufacturer  ·  Model  ·  Segment
+  Battery_kWh (or BatterykWh)  ·  Range_km (or Rangekm)
+  Revenue_INR (or RevenueINR)  ·  Operating_Cost_INR (or OperatingCostINR)""")
 
 else:
+    # ── EMPTY STATE ──
     st.markdown("""
-    <div class='empty-state'>
-        <div class='empty-icon'>⚡</div>
-        <h2 class='empty-title'>Upload Your EV Dataset</h2>
-        <p class='empty-sub'>
-            Drop in a CSV or Excel file to unlock real-time analytics, 
-            visual breakdowns, and downloadable reports.
+    <div class='empty-wrap'>
+        <div class='empty-icon'>📊</div>
+        <div class='empty-title'>Upload Your EV Dataset</div>
+        <p class='empty-body'>
+            Drop a CSV or Excel file into the sidebar to unlock live analytics,
+            segment breakdowns, manufacturer rankings, and exportable reports.
         </p>
-        <div class='format-chips'>
-            <span class='format-chip'>.csv</span>
-            <span class='format-chip'>.xlsx</span>
+        <div class='fmt-chips'>
+            <span class='fmt-chip'>.csv</span>
+            <span class='fmt-chip'>.xlsx</span>
         </div>
-    </div>
-    """, unsafe_allow_html=True)
+        <div class='step-grid'>
+            <div class='step'>
+                <span class='step-num'>Step 1</span>
+                <div class='step-text'>Upload your CSV or Excel file from the sidebar panel</div>
+            </div>
+            <div class='step'>
+                <span class='step-num'>Step 2</span>
+                <div class='step-text'>Use segment & manufacturer filters to focus your view</div>
+            </div>
+            <div class='step'>
+                <span class='step-num'>Step 3</span>
+                <div class='step-text'>Explore charts and download filtered reports instantly</div>
+            </div>
+        </div>
+    </div>""", unsafe_allow_html=True)
